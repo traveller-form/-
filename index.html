@@ -46,14 +46,31 @@ header.top{position:sticky;top:0;z-index:20;background:var(--paper);
 .top-row{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
 .brand{font-family:var(--font-head);font-weight:700;font-size:1.05rem;letter-spacing:-0.01em}
 .brand span{color:var(--accent)}
-.meter{flex:1;min-width:140px;height:5px;border-radius:99px;background:var(--line);overflow:hidden}
+.meter{flex:1;min-width:120px;max-width:420px;height:5px;border-radius:99px;background:var(--line);overflow:hidden}
 .meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s ease}
 .meter-label{font-size:.78rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
 
-.intro{margin-bottom:28px}
-h1{font-family:var(--font-head);font-weight:700;font-size:clamp(1.6rem,4.5vw,2.2rem);line-height:1.15;
-  letter-spacing:-0.02em;text-wrap:balance;margin:0 0 8px}
-.intro p{color:var(--ink-soft);max-width:60ch;margin:0}
+/* Hero: the jet photo with a teal scrim over it so white type stays legible,
+   fading into the page colour at the bottom so the band joins the page
+   instead of sitting on it like a sticker. */
+.hero{position:relative;border-radius:12px;overflow:hidden;margin-bottom:28px;
+  background:#0d2b35;isolation:isolate}
+.hero-img{position:absolute;inset:0;background-image:url('jet.jpg');
+  background-size:cover;background-position:72% 38%;z-index:0}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(180deg, rgba(10,38,47,.22) 0%, rgba(10,38,47,.64) 58%, var(--paper) 100%),
+    linear-gradient(90deg, rgba(10,38,47,.86) 0%, rgba(10,38,47,.55) 48%, rgba(10,38,47,.10) 85%)}
+.hero-text{position:relative;z-index:2;padding:72px 24px 26px;max-width:62ch}
+h1{font-family:var(--font-head);font-weight:700;font-size:clamp(1.7rem,5vw,2.4rem);line-height:1.12;
+  letter-spacing:-0.02em;text-wrap:balance;margin:0 0 10px;color:#fff}
+.hero-text p{color:rgba(255,255,255,.88);margin:0;max-width:56ch}
+.hero-text .req{color:#f0c374}
+.eyebrow{font-family:var(--font-head);font-size:.72rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.14em;color:rgba(255,255,255,.72);margin:0 0 10px}
+@media (max-width:560px){
+  .hero-text{padding:56px 18px 22px}
+}
 
 section.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
   padding:20px;margin-bottom:16px}
@@ -67,6 +84,9 @@ h2{font-family:var(--font-head);font-size:1.05rem;font-weight:600;margin:0;lette
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field.wide{grid-column:1/-1}
 label{font-size:.8rem;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-soft)}
+/* Push the control to the bottom of its cell, so a label that wraps onto two
+   lines no longer drags its box out of line with the rest of the row. */
+.field > input,.field > select,.field > textarea{margin-top:auto}
 .req{color:var(--ochre)}
 input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select,textarea{
   font-family:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);
@@ -128,18 +148,21 @@ pre.recap{background:var(--paper);border:1px solid var(--line);border-radius:8px
 <header class="top">
   <div class="wrap" style="padding-block:0">
     <div class="top-row">
-      <div class="brand">Travel Desk <span>&middot;</span> Booking Request</div>
+      <div class="brand">Travel Desk</div>
       <div class="meter" aria-hidden="true"><i id="bar"></i></div>
-      <div class="meter-label" id="meterLabel">0 of 9 required answers</div>
     </div>
   </div>
 </header>
 
 <div class="wrap">
 <div id="formView">
-  <div class="intro">
-    <h1>Traveller booking request</h1>
-    <p>Tick what you need and fill in the details. Anything left blank is treated as "no preference". Fields marked <span class="req">*</span> are needed before the travel desk can quote a fare.</p>
+  <div class="hero">
+    <div class="hero-img" role="img" aria-label="Business jet climbing away after take-off"></div>
+    <div class="hero-text">
+      <p class="eyebrow">Travel desk</p>
+      <h1>Traveller booking request</h1>
+      <p>Tick what you need and fill in the details. Anything left blank is treated as "no preference". Fields marked <span class="req">*</span> are needed before the travel desk can quote a fare.</p>
+    </div>
   </div>
 
   <form id="f" novalidate>
@@ -147,14 +170,14 @@ pre.recap{background:var(--paper);border:1px solid var(--line);border-radius:8px
   <section class="card">
     <div class="sec-head"><span class="num">01</span><div>
       <h2>Traveller details</h2>
-      <p class="hint">Names must match the passport or ID exactly &mdash; airlines charge to correct them.</p>
+      <p class="hint">Names, date of birth and gender must match the passport or ID exactly &mdash; airlines charge to correct them.</p>
     </div></div>
     <div class="grid">
       <div class="field"><label for="first">First name(s) <span class="req">*</span></label><input id="first" name="first" type="text" autocomplete="given-name" data-req></div>
       <div class="field"><label for="middle">Middle name(s)</label><input id="middle" name="middle" type="text"></div>
       <div class="field"><label for="surname">Surname <span class="req">*</span></label><input id="surname" name="surname" type="text" autocomplete="family-name" data-req></div>
       <div class="field"><label for="dob">Date of birth <span class="req">*</span></label><input id="dob" name="dob" type="date" data-req></div>
-      <div class="field"><label for="gender">Gender (as on travel document)</label>
+      <div class="field"><label for="gender">Gender</label>
         <select id="gender" name="gender"><option value="">Select</option><option>Female</option><option>Male</option><option>Other / as stated on document</option><option>Prefer not to say</option></select></div>
       <div class="field"><label for="nationality">Nationality <span class="req">*</span></label><input id="nationality" name="nationality" type="text" data-req></div>
       <div class="field"><label for="residence">Country of residence</label><input id="residence" name="residence" type="text" autocomplete="country-name"></div>
@@ -255,7 +278,7 @@ pre.recap{background:var(--paper);border:1px solid var(--line);border-radius:8px
     </div>
     <div class="grid" id="bagBlock" hidden style="margin-top:14px">
       <div class="field"><label for="bagCount">Number of checked bags</label><input id="bagCount" name="bagCount" type="number" min="1" max="6" value="1"></div>
-      <div class="field"><label for="bagNote">Special items (golf bag, instrument, sports gear)</label><input id="bagNote" name="bagNote" type="text"></div>
+      <div class="field"><label for="bagNote">Special items</label><input id="bagNote" name="bagNote" type="text" placeholder="Golf bag, instrument, sports gear"></div>
     </div>
   </section>
 
@@ -268,7 +291,7 @@ pre.recap{background:var(--paper);border:1px solid var(--line);border-radius:8px
       <div class="field"><label for="checkin">Check-in date</label><input id="checkin" name="checkin" type="date"></div>
       <div class="field"><label for="checkout">Check-out date</label><input id="checkout" name="checkout" type="date"></div>
       <div class="field"><label for="hotelCity">City / location</label><input id="hotelCity" name="hotelCity" type="text"></div>
-      <div class="field wide"><label for="hotelNote">Preferences (near venue, parking, breakfast)</label><input id="hotelNote" name="hotelNote" type="text"></div>
+      <div class="field wide"><label for="hotelNote">Hotel preferences</label><input id="hotelNote" name="hotelNote" type="text" placeholder="Near venue, parking, breakfast"></div>
     </div>
   </section>
 
@@ -289,8 +312,8 @@ pre.recap{background:var(--paper);border:1px solid var(--line);border-radius:8px
       <p class="hint">The travel desk cannot ticket without an approved travel request. Attach it in your email, then tick below.</p></div></div>
     <div class="grid">
       <div class="field"><label for="reqRef">Travel request reference</label><input id="reqRef" name="reqRef" type="text" placeholder="TR-2026-0142"></div>
-      <div class="field"><label for="approver">Approved by (name &amp; role)</label><input id="approver" name="approver" type="text"></div>
-      <div class="field"><label for="costcentre">Cost centre / matter number</label><input id="costcentre" name="costcentre" type="text"></div>
+      <div class="field"><label for="approver">Approved by</label><input id="approver" name="approver" type="text" placeholder="Name and role"></div>
+      <div class="field"><label for="costcentre">Cost centre</label><input id="costcentre" name="costcentre" type="text" placeholder="Cost centre or matter number"></div>
       <div class="field"><label for="purpose">Purpose of trip</label><input id="purpose" name="purpose" type="text"></div>
     </div>
     <div class="ticks col" style="margin-top:14px">
@@ -471,7 +494,6 @@ function progress(){
     }
   }
   document.getElementById('bar').style.width = (total ? (done / total * 100) : 0) + '%';
-  document.getElementById('meterLabel').textContent = done + ' of ' + total + ' required answers';
 }
 
 document.getElementById('f').addEventListener('input', function(){ paintTicks(); reveal(); progress(); });
