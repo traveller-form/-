@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traveller Booking Request</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: single column of numbered cards on a tinted ground; sticky header holds progress + submit. */
+:root{
+  --paper:#f6f4ef;
+  --card:#ffffff;
+  --ink:#1b2430;
+  --ink-soft:#5c6677;
+  --line:#ddd8cd;
+  --accent:#1c5f73;
+  --accent-soft:#e3eef1;
+  --ochre:#9a6b22;
+  --good:#2f6b43;
+  --bad:#a33a2d;
+  --font-head:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-body:"Public Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#141a21;--card:#1c242e;--ink:#eceae4;--ink-soft:#a3adbb;--line:#2e3945;
+    --accent:#63b3c7;--accent-soft:#1e333b;--ochre:#d6a456;--good:#79c194;--bad:#e8897a;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:15px;
+  line-height:1.55;margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
+
+header.top{position:sticky;top:0;z-index:20;background:var(--paper);
+  border-bottom:1px solid var(--line);padding-block:12px;margin-bottom:24px}
+.top-row{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+.brand{font-family:var(--font-head);font-weight:700;font-size:1.05rem;letter-spacing:-0.01em}
+.brand span{color:var(--accent)}
+.meter{flex:1;min-width:140px;height:5px;border-radius:99px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s ease}
+.meter-label{font-size:.78rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.intro{margin-bottom:28px}
+h1{font-family:var(--font-head);font-weight:700;font-size:clamp(1.6rem,4.5vw,2.2rem);line-height:1.15;
+  letter-spacing:-0.02em;text-wrap:balance;margin:0 0 8px}
+.intro p{color:var(--ink-soft);max-width:60ch;margin:0}
+
+section.card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:20px;margin-bottom:16px}
+.sec-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}
+.num{font-family:var(--font-head);font-weight:600;font-size:.82rem;color:var(--accent);
+  background:var(--accent-soft);border-radius:6px;padding:3px 8px;font-variant-numeric:tabular-nums;flex:none}
+h2{font-family:var(--font-head);font-size:1.05rem;font-weight:600;margin:0;letter-spacing:-0.01em}
+.hint{font-size:.82rem;color:var(--ink-soft);margin:3px 0 0}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.wide{grid-column:1/-1}
+label{font-size:.8rem;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-soft)}
+.req{color:var(--ochre)}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select,textarea{
+  font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);
+  border-radius:7px;padding:9px 11px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:70px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.tick:focus-within{
+  outline:2px solid var(--accent);outline-offset:2px}
+
+.ticks{display:flex;flex-wrap:wrap;gap:8px}
+.ticks.col{flex-direction:column}
+.tick{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);border-radius:7px;
+  padding:9px 12px;cursor:pointer;background:var(--paper);flex:0 1 auto}
+.tick:hover{border-color:var(--accent)}
+.tick input{accent-color:var(--accent);margin:2px 0 0;flex:none;width:16px;height:16px}
+.tick span{font-size:.92rem}
+.tick.on{border-color:var(--accent);background:var(--accent-soft)}
+.tick.block{flex:1 1 100%}
+.tick small{display:block;color:var(--ink-soft);font-size:.78rem}
+
+.sub{border-left:2px solid var(--accent-soft);padding-left:14px;margin-top:16px}
+.sub h3{font-family:var(--font-head);font-size:.85rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--ink-soft);margin:0 0 10px}
+
+.stop{border:1px dashed var(--line);border-radius:8px;padding:14px;margin-bottom:10px}
+.stop-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.stop-top b{font-family:var(--font-head);font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+button{font:inherit;cursor:pointer;border-radius:7px;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);padding:8px 14px}
+button.ghost{font-size:.85rem;padding:5px 10px}
+button.ghost:hover{border-color:var(--accent);color:var(--accent)}
+button.danger:hover{border-color:var(--bad);color:var(--bad)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;padding:12px 22px}
+button.primary:hover{filter:brightness(1.08)}
+button.primary:disabled{opacity:.55;cursor:not-allowed;filter:none}
+
+.foot{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:24px}
+.foot p{margin:0;font-size:.85rem;color:var(--ink-soft)}
+.status{font-size:.88rem;margin-top:14px}
+.status.err{color:var(--bad)}
+.status.ok{color:var(--good)}
+
+.done{background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:28px}
+.done h2{font-size:1.4rem;margin-bottom:8px}
+.ref{font-family:var(--font-head);font-size:1.5rem;font-variant-numeric:tabular-nums;color:var(--accent);
+  letter-spacing:.04em;margin:12px 0}
+pre.recap{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px;
+  overflow-x:auto;font-size:.82rem;white-space:pre-wrap;word-break:break-word}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap" style="padding-block:0">
+    <div class="top-row">
+      <div class="brand">Travel Desk <span>&middot;</span> Booking Request</div>
+      <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+      <div class="meter-label" id="meterLabel">0 of 9 required answers</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div id="formView">
+  <div class="intro">
+    <h1>Traveller booking request</h1>
+    <p>Tick what you need and fill in the details. Anything left blank is treated as "no preference". Fields marked <span class="req">*</span> are needed before the travel desk can quote a fare.</p>
+  </div>
+
+  <form id="f" novalidate>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">01</span><div>
+      <h2>Traveller details</h2>
+      <p class="hint">Names must match the passport or ID exactly &mdash; airlines charge to correct them.</p>
+    </div></div>
+    <div class="grid">
+      <div class="field"><label for="first">First name(s) <span class="req">*</span></label><input id="first" name="first" type="text" autocomplete="given-name" data-req></div>
+      <div class="field"><label for="middle">Middle name(s)</label><input id="middle" name="middle" type="text"></div>
+      <div class="field"><label for="surname">Surname <span class="req">*</span></label><input id="surname" name="surname" type="text" autocomplete="family-name" data-req></div>
+      <div class="field"><label for="dob">Date of birth <span class="req">*</span></label><input id="dob" name="dob" type="date" data-req></div>
+      <div class="field"><label for="gender">Gender (as on travel document)</label>
+        <select id="gender" name="gender"><option value="">Select</option><option>Female</option><option>Male</option><option>Other / as stated on document</option><option>Prefer not to say</option></select></div>
+      <div class="field"><label for="nationality">Nationality <span class="req">*</span></label><input id="nationality" name="nationality" type="text" data-req></div>
+      <div class="field"><label for="residence">Country of residence</label><input id="residence" name="residence" type="text" autocomplete="country-name"></div>
+      <div class="field"><label for="mobile">Mobile / WhatsApp <span class="req">*</span></label><input id="mobile" name="mobile" type="tel" autocomplete="tel" placeholder="+27 ..." data-req></div>
+      <div class="field"><label for="email">Email address <span class="req">*</span></label><input id="email" name="email" type="email" autocomplete="email" data-req></div>
+      <div class="field wide"><label for="docnum">Passport / ID number</label><input id="docnum" name="docnum" type="text"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">02</span><div>
+      <h2>Trip details</h2>
+      <p class="hint">Pick a journey type first &mdash; the rest of this section changes to suit it.</p>
+    </div></div>
+
+    <div class="field">
+      <label>Journey type <span class="req">*</span></label>
+      <div class="ticks" id="journeyTicks">
+        <label class="tick"><input type="radio" name="journey" value="One-way" data-req><span>One-way</span></label>
+        <label class="tick"><input type="radio" name="journey" value="Return" checked><span>Return</span></label>
+        <label class="tick"><input type="radio" name="journey" value="Multi-city"><span>Multi-city</span></label>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Departure</h3>
+      <div class="grid">
+        <div class="field"><label for="depCity">Departure city / airport <span class="req">*</span></label><input id="depCity" name="depCity" type="text" placeholder="Johannesburg (JNB)" data-req></div>
+        <div class="field"><label for="depDate">Preferred departure date <span class="req">*</span></label><input id="depDate" name="depDate" type="date" data-req></div>
+        <div class="field wide"><label>Preferred departure time</label>
+          <div class="ticks">
+            <label class="tick"><input type="radio" name="depTime" value="Morning"><span>Morning</span></label>
+            <label class="tick"><input type="radio" name="depTime" value="Afternoon"><span>Afternoon</span></label>
+            <label class="tick"><input type="radio" name="depTime" value="Evening"><span>Evening</span></label>
+            <label class="tick on"><input type="radio" name="depTime" value="No preference" checked><span>No preference</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Destination</h3>
+      <div class="grid">
+        <div class="field"><label for="arrCity">Arrival city / airport <span class="req">*</span></label><input id="arrCity" name="arrCity" type="text" placeholder="Cape Town (CPT)" data-req></div>
+        <div class="field"><label for="arrDate">Preferred arrival date</label><input id="arrDate" name="arrDate" type="date"></div>
+        <div class="field wide"><label>Preferred arrival time</label>
+          <div class="ticks">
+            <label class="tick"><input type="radio" name="arrTime" value="Morning"><span>Morning</span></label>
+            <label class="tick"><input type="radio" name="arrTime" value="Afternoon"><span>Afternoon</span></label>
+            <label class="tick"><input type="radio" name="arrTime" value="Evening"><span>Evening</span></label>
+            <label class="tick on"><input type="radio" name="arrTime" value="No preference" checked><span>No preference</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub" id="returnBlock">
+      <h3>Return leg</h3>
+      <div class="grid">
+        <div class="field"><label for="retCity">Return departure city / airport</label><input id="retCity" name="retCity" type="text"></div>
+        <div class="field"><label for="retDate">Return date</label><input id="retDate" name="retDate" type="date"></div>
+        <div class="field wide"><label>Preferred return time</label>
+          <div class="ticks">
+            <label class="tick"><input type="radio" name="retTime" value="Morning"><span>Morning</span></label>
+            <label class="tick"><input type="radio" name="retTime" value="Afternoon"><span>Afternoon</span></label>
+            <label class="tick"><input type="radio" name="retTime" value="Evening"><span>Evening</span></label>
+            <label class="tick on"><input type="radio" name="retTime" value="No preference" checked><span>No preference</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub" id="multiBlock" hidden>
+      <h3>Multi-city stops</h3>
+      <p class="hint" style="margin-bottom:10px">Add one stop per leg, in travel order.</p>
+      <div id="stops"></div>
+      <button type="button" class="ghost" id="addStop">+ Add another stop</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">03</span><div><h2>Cabin class</h2>
+      <p class="hint">Must match what the approved travel request allows.</p></div></div>
+    <div class="ticks">
+      <label class="tick on"><input type="radio" name="cabin" value="Economy" checked data-req><span>Economy</span></label>
+      <label class="tick"><input type="radio" name="cabin" value="Premium Economy"><span>Premium Economy</span></label>
+      <label class="tick"><input type="radio" name="cabin" value="Business"><span>Business</span></label>
+      <label class="tick"><input type="radio" name="cabin" value="First"><span>First</span></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">04</span><div><h2>Baggage</h2>
+      <p class="hint">Hand luggage is included on most fares. Checked bags usually are not.</p></div></div>
+    <div class="ticks">
+      <label class="tick"><input type="radio" name="bags" value="No" checked data-req><span>No checked baggage</span></label>
+      <label class="tick"><input type="radio" name="bags" value="Yes"><span>Yes, I need checked baggage</span></label>
+    </div>
+    <div class="grid" id="bagBlock" hidden style="margin-top:14px">
+      <div class="field"><label for="bagCount">Number of checked bags</label><input id="bagCount" name="bagCount" type="number" min="1" max="6" value="1"></div>
+      <div class="field"><label for="bagNote">Special items (golf bag, instrument, sports gear)</label><input id="bagNote" name="bagNote" type="text"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">05</span><div><h2>Accommodation</h2></div></div>
+    <div class="ticks">
+      <label class="tick"><input type="checkbox" id="hotel" name="hotel"><span>I need a hotel booked</span></label>
+    </div>
+    <div class="grid" id="hotelBlock" hidden style="margin-top:14px">
+      <div class="field"><label for="checkin">Check-in date</label><input id="checkin" name="checkin" type="date"></div>
+      <div class="field"><label for="checkout">Check-out date</label><input id="checkout" name="checkout" type="date"></div>
+      <div class="field"><label for="hotelCity">City / location</label><input id="hotelCity" name="hotelCity" type="text"></div>
+      <div class="field wide"><label for="hotelNote">Preferences (near venue, parking, breakfast)</label><input id="hotelNote" name="hotelNote" type="text"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">06</span><div><h2>Ground transport</h2></div></div>
+    <div class="ticks col">
+      <label class="tick block"><input type="checkbox" id="transfer" name="transfer"><span>I need an airport transfer<small>Shuttle or e-hailing arranged by the travel desk</small></span></label>
+      <label class="tick block"><input type="checkbox" id="carhire" name="carhire"><span>I need a hire car<small>Driver's licence details will be requested separately</small></span></label>
+    </div>
+    <div class="grid" id="transferBlock" hidden style="margin-top:14px">
+      <div class="field"><label for="pickup">Pick-up location</label><input id="pickup" name="pickup" type="text"></div>
+      <div class="field"><label for="dropoff">Drop-off location</label><input id="dropoff" name="dropoff" type="text"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">07</span><div><h2>Booking authorisation</h2>
+      <p class="hint">The travel desk cannot ticket without an approved travel request. Attach it in your email, then tick below.</p></div></div>
+    <div class="grid">
+      <div class="field"><label for="reqRef">Travel request reference</label><input id="reqRef" name="reqRef" type="text" placeholder="TR-2026-0142"></div>
+      <div class="field"><label for="approver">Approved by (name &amp; role)</label><input id="approver" name="approver" type="text"></div>
+      <div class="field"><label for="costcentre">Cost centre / matter number</label><input id="costcentre" name="costcentre" type="text"></div>
+      <div class="field"><label for="purpose">Purpose of trip</label><input id="purpose" name="purpose" type="text"></div>
+    </div>
+    <div class="ticks col" style="margin-top:14px">
+      <label class="tick block"><input type="checkbox" id="attached" name="attached" data-req><span>The approved travel request is attached or already with the travel desk <span class="req">*</span></span></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sec-head"><span class="num">08</span><div><h2>Consent and confirmation</h2></div></div>
+    <div class="ticks col">
+      <label class="tick block"><input type="checkbox" name="c1" data-req><span>I confirm the information above is accurate and matches the traveller's travel documents. <span class="req">*</span></span></label>
+      <label class="tick block"><input type="checkbox" name="c2" data-req><span>I understand fares, availability, baggage allowances and booking conditions follow the airline's terms and may change until the booking is ticketed. <span class="req">*</span></span></label>
+      <label class="tick block"><input type="checkbox" name="c3" data-req><span>I authorise the company to use this information to arrange and manage my travel booking. <span class="req">*</span></span></label>
+    </div>
+    <div class="field wide" style="margin-top:14px"><label for="notes">Anything else the travel desk should know</label><textarea id="notes" name="notes" placeholder="Visa status, dietary needs, accessibility, travelling with a colleague..."></textarea></div>
+  </section>
+
+  <div class="foot">
+    <button type="submit" class="primary" id="submitBtn">Submit request</button>
+    <p id="saveNote">Your answers are sent to the travel desk.</p>
+  </div>
+  <div class="status" id="status" role="status"></div>
+  </form>
+</div>
+
+<div id="doneView" hidden>
+  <div class="done">
+    <h2>Request received</h2>
+    <p>The travel desk will come back with fare options. Quote this reference in any follow-up.</p>
+    <div class="ref" id="refOut"></div>
+    <p class="hint">A copy of your answers:</p>
+    <pre class="recap" id="recap"></pre>
+    <div class="foot"><button type="button" id="again">Submit another request</button></div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ==========================================================================
+   CONFIG - the only two lines you edit after deploying the Apps Script
+   ========================================================================== */
+var CONFIG = {
+  // Paste the Apps Script web app URL here (ends in /exec)
+  endpoint: 'PASTE_YOUR_APPS_SCRIPT_URL_HERE',
+  // Must match SHARED_SECRET in Code.gs exactly
+  secret: 'change-this-to-a-long-random-string'
+};
+
+/* Form field name -> Google Sheet column header.
+   Change a header in the sheet? Change it here too, spelled identically. */
+var SHEET_COLUMNS = {
+  reference:   'Reference',
+  submittedAt: 'Submitted on',
+  first:       'First name(s)',
+  middle:      'Middle name(s)',
+  surname:     'Surname',
+  dob:         'Date of birth',
+  gender:      'Gender',
+  nationality: 'Nationality',
+  residence:   'Country of residence',
+  mobile:      'Mobile / WhatsApp',
+  email:       'Email',
+  docnum:      'Passport / ID',
+  journey:     'Journey type',
+  depCity:     'Departure city',
+  depDate:     'Departure date',
+  depTime:     'Departure time',
+  arrCity:     'Arrival city',
+  arrDate:     'Arrival date',
+  arrTime:     'Arrival time',
+  retCity:     'Return city',
+  retDate:     'Return date',
+  retTime:     'Return time',
+  stopsText:   'Multi-city stops',
+  cabin:       'Cabin class',
+  bags:        'Checked baggage',
+  bagCount:    'No. of bags',
+  bagNote:     'Special items',
+  hotel:       'Hotel needed',
+  checkin:     'Check-in',
+  checkout:    'Check-out',
+  hotelCity:   'Hotel city',
+  hotelNote:   'Hotel preferences',
+  transfer:    'Airport transfer',
+  carhire:     'Hire car',
+  pickup:      'Pick-up',
+  dropoff:     'Drop-off',
+  reqRef:      'Travel request ref',
+  approver:    'Approved by',
+  costcentre:  'Cost centre',
+  purpose:     'Purpose',
+  attached:    'Approval attached',
+  c1:          'Consent: accuracy',
+  c2:          'Consent: airline terms',
+  c3:          'Consent: use of information',
+  notes:       'Notes'
+};
+
+/* ========================================================================== */
+
+var stopCount = 0;
+
+function addStop(){
+  stopCount++;
+  var n = stopCount;
+  var d = document.createElement('div');
+  d.className = 'stop';
+  d.dataset.stop = n;
+  d.innerHTML =
+    '<div class="stop-top"><b>Stop ' + n + '</b>' +
+    '<button type="button" class="ghost danger" data-remove="' + n + '">Remove</button></div>' +
+    '<div class="grid">' +
+      '<div class="field"><label for="mcFrom' + n + '">From</label><input id="mcFrom' + n + '" type="text" data-mc="from"></div>' +
+      '<div class="field"><label for="mcTo' + n + '">To</label><input id="mcTo' + n + '" type="text" data-mc="to"></div>' +
+      '<div class="field"><label for="mcDate' + n + '">Date</label><input id="mcDate' + n + '" type="date" data-mc="date"></div>' +
+      '<div class="field"><label for="mcTime' + n + '">Preferred time</label>' +
+        '<select id="mcTime' + n + '" data-mc="time"><option>No preference</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select></div>' +
+    '</div>';
+  document.getElementById('stops').appendChild(d);
+  renumber();
+}
+
+function renumber(){
+  var list = document.querySelectorAll('#stops .stop');
+  for (var i = 0; i < list.length; i++){
+    list[i].querySelector('b').textContent = 'Stop ' + (i + 1);
+  }
+}
+
+document.getElementById('addStop').addEventListener('click', addStop);
+
+document.getElementById('stops').addEventListener('click', function(e){
+  var btn = e.target.closest('[data-remove]');
+  if (!btn) return;
+  btn.closest('.stop').remove();
+  renumber();
+});
+
+function paintTicks(){
+  var ticks = document.querySelectorAll('.tick');
+  for (var i = 0; i < ticks.length; i++){
+    var inp = ticks[i].querySelector('input');
+    if (inp) ticks[i].classList.toggle('on', inp.checked);
+  }
+}
+
+function reveal(){
+  var journey = document.querySelector('input[name=journey]:checked');
+  var j = journey ? journey.value : 'Return';
+  document.getElementById('returnBlock').hidden = (j !== 'Return');
+  var multi = (j === 'Multi-city');
+  document.getElementById('multiBlock').hidden = !multi;
+  if (multi && stopCount === 0) addStop();
+
+  var bags = document.querySelector('input[name=bags]:checked');
+  document.getElementById('bagBlock').hidden = !(bags && bags.value === 'Yes');
+  document.getElementById('hotelBlock').hidden = !document.getElementById('hotel').checked;
+  document.getElementById('transferBlock').hidden =
+    !(document.getElementById('transfer').checked || document.getElementById('carhire').checked);
+}
+
+function progress(){
+  var req = document.querySelectorAll('[data-req]');
+  var groups = {}, done = 0, total = 0;
+  for (var i = 0; i < req.length; i++){
+    var el = req[i];
+    if (el.type === 'radio'){
+      if (groups[el.name]) continue;
+      groups[el.name] = true;
+      total++;
+      if (document.querySelector('input[name="' + el.name + '"]:checked')) done++;
+    } else if (el.type === 'checkbox'){
+      total++;
+      if (el.checked) done++;
+    } else {
+      total++;
+      if (el.value.trim()) done++;
+    }
+  }
+  document.getElementById('bar').style.width = (total ? (done / total * 100) : 0) + '%';
+  document.getElementById('meterLabel').textContent = done + ' of ' + total + ' required answers';
+}
+
+document.getElementById('f').addEventListener('input', function(){ paintTicks(); reveal(); progress(); });
+document.getElementById('f').addEventListener('change', function(){ paintTicks(); reveal(); progress(); });
+
+function collect(){
+  var f = document.getElementById('f');
+  var out = {};
+  var els = f.querySelectorAll('input,select,textarea');
+  for (var i = 0; i < els.length; i++){
+    var el = els[i];
+    if (!el.name) continue;
+    if (el.type === 'radio'){ if (el.checked) out[el.name] = el.value; }
+    else if (el.type === 'checkbox'){ out[el.name] = el.checked; }
+    else if (el.value.trim()) out[el.name] = el.value.trim();
+  }
+
+  var stops = [];
+  var list = document.querySelectorAll('#stops .stop');
+  for (var k = 0; k < list.length; k++){
+    var s = list[k], o = {};
+    var ins = s.querySelectorAll('[data-mc]');
+    for (var m = 0; m < ins.length; m++){
+      if (ins[m].value.trim()) o[ins[m].dataset.mc] = ins[m].value.trim();
+    }
+    if (Object.keys(o).length) stops.push(o);
+  }
+  if (stops.length){
+    out.multiCityStops = stops;
+    var text = [];
+    for (var p = 0; p < stops.length; p++){
+      var st = stops[p];
+      text.push('Stop ' + (p + 1) + ': ' + (st.from || '?') + ' to ' + (st.to || '?') +
+                ', ' + (st.date || 'date TBC') + (st.time ? ', ' + st.time : ''));
+    }
+    out.stopsText = text.join(' | ');
+  }
+  return out;
+}
+
+function missing(){
+  var req = document.querySelectorAll('[data-req]');
+  var seen = {}, bad = [];
+  for (var i = 0; i < req.length; i++){
+    var el = req[i];
+    if (el.type === 'radio'){
+      if (seen[el.name]) continue;
+      seen[el.name] = true;
+      if (!document.querySelector('input[name="' + el.name + '"]:checked')) bad.push(el);
+    } else if (el.type === 'checkbox'){
+      if (!el.checked) bad.push(el);
+    } else if (!el.value.trim()){
+      bad.push(el);
+    }
+  }
+  return bad;
+}
+
+function makeRef(){
+  var d = new Date();
+  var y = String(d.getFullYear()).slice(2);
+  var m = ('0' + (d.getMonth() + 1)).slice(-2);
+  var day = ('0' + d.getDate()).slice(-2);
+  var rand = Math.floor(Math.random() * 9000 + 1000);
+  return 'TRV-' + y + m + day + '-' + rand;
+}
+
+/* Turn the form's field names into the sheet's column headers. */
+function toSheetRow(data){
+  var row = {};
+  for (var key in SHEET_COLUMNS){
+    if (!Object.prototype.hasOwnProperty.call(SHEET_COLUMNS, key)) continue;
+    var v = data[key];
+    if (v === undefined) continue;
+    if (v === true) v = 'Yes';
+    if (v === false) v = 'No';
+    row[SHEET_COLUMNS[key]] = v;
+  }
+  row['Status'] = 'New';
+  return row;
+}
+
+function recapText(data){
+  var lines = [];
+  for (var key in SHEET_COLUMNS){
+    if (!Object.prototype.hasOwnProperty.call(SHEET_COLUMNS, key)) continue;
+    if (!(key in data)) continue;
+    var v = data[key];
+    if (v === false) continue;
+    if (v === true) v = 'Yes';
+    lines.push(SHEET_COLUMNS[key] + ': ' + v);
+  }
+  return lines.join('\n');
+}
+
+document.getElementById('f').addEventListener('submit', function(e){
+  e.preventDefault();
+  var status = document.getElementById('status');
+  var bad = missing();
+
+  if (bad.length){
+    status.className = 'status err';
+    status.textContent = bad.length + ' required ' + (bad.length === 1 ? 'answer is' : 'answers are') +
+      ' still blank. The first one is highlighted.';
+    bad[0].scrollIntoView({block:'center', behavior:'smooth'});
+    if (bad[0].focus) bad[0].focus({preventScroll:true});
+    return;
+  }
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  status.className = 'status';
+  status.textContent = 'Sending…';
+
+  var data = collect();
+  data.reference = makeRef();
+  data.submittedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+  function finish(note){
+    document.getElementById('formView').hidden = true;
+    document.getElementById('doneView').hidden = false;
+    document.getElementById('refOut').textContent = data.reference;
+    document.getElementById('recap').textContent = recapText(data) + (note ? '\n\n' + note : '');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  if (CONFIG.endpoint.indexOf('PASTE_') === 0){
+    finish('Not sent - the Apps Script URL has not been set in index.html yet.');
+    btn.disabled = false;
+    return;
+  }
+
+  // text/plain avoids a CORS preflight; Apps Script reads the raw body either way.
+  fetch(CONFIG.endpoint, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify({secret: CONFIG.secret, data: toSheetRow(data)})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    btn.disabled = false;
+    if (res && res.ok){
+      finish('');
+    } else {
+      status.className = 'status err';
+      status.textContent = 'The travel desk system rejected this request (' +
+        ((res && res.error) || 'unknown error') + '). Please email your answers instead.';
+    }
+  })
+  .catch(function(){
+    btn.disabled = false;
+    status.className = 'status err';
+    status.textContent = 'Could not reach the travel desk system. Check your connection and try again, ' +
+      'or email your answers instead.';
+  });
+});
+
+document.getElementById('again').addEventListener('click', function(){
+  document.getElementById('f').reset();
+  document.getElementById('stops').innerHTML = '';
+  stopCount = 0;
+  document.getElementById('doneView').hidden = true;
+  document.getElementById('formView').hidden = false;
+  document.getElementById('status').textContent = '';
+  paintTicks(); reveal(); progress();
+  window.scrollTo({top:0});
+});
+
+paintTicks(); reveal(); progress();
+</script>
+</body>
+</html>
